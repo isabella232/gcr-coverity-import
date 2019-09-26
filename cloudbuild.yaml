@@ -1,31 +1,14 @@
 steps:
 
-- id: go-build-linux
+- id: go-build
   name: 'golang:1.13'
-  entrypoint: 'go'
-  args: ['build', 'cmd/report/report.go']
-  env:
-  - 'GOOS=linux'
-  - 'GOARCH=amd64'
-  waitFor: ['-']
-
-- id: go-build-win
-  name: 'golang:1.13'
-  entrypoint: 'go'
-  args: ['build', 'cmd/report/report.go']
-  env:
-  - 'GOOS=windows'
-  - 'GOARCH=amd64'
-  waitFor: ['-']
-
-- id: go-build-darwin
-  name: 'golang:1.13'
-  entrypoint: 'go'
-  args: ['build', 'cmd/report/report.go']
-  env:
-  - 'GOOS=darwin'
-  - 'GOARCH=amd64'
-  waitFor: ['-']
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - >-
+    mkdir dist;
+    env GOOS=linux GOARCH=amd64 go build -o dist/report cmd/report/report.go;
+    env GOOS=windows GOARCH=amd64 go build -o dist/report.exe cmd/report/report.go;
 
 # Create a github release and upload the artifacts with a go tool
 - id: release
@@ -38,12 +21,10 @@ steps:
     if [ "$TAG_NAME" ] ; then
       curl -sf -o ghr_v0.12.1_linux_amd64.tar.gz -L https://github.com/tcnksm/ghr/releases/download/v0.12.1/ghr_v0.12.1_linux_amd64.tar.gz;
       echo -n "471c2eb1aee20dedffd00254f6c445abb5eb7d479bcae32c4210fdcf036b2dce  ghr_v0.12.1_linux_amd64.tar.gz" | sha256sum -c - && tar xzf ghr_v0.12.1_linux_amd64.tar.gz;
-      ghr_*/ghr -t $$GITHUB_TOKEN -u e-conomic -r gcr-coverity-import $TAG_NAME report*;
+      ghr_*/ghr -t $$GITHUB_TOKEN -u e-conomic -r gcr-coverity-import $TAG_NAME dist;
     fi
   waitFor:
-  - 'go-build-linux'
-  - 'go-build-win'
-  - 'go-build-darwin'
+  - 'go-build'
 
 secrets:
 - kmsKeyName: projects/dev-vml-cm/locations/global/keyRings/builder/cryptoKeys/github-key
