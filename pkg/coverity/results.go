@@ -91,6 +91,18 @@ func TransformGrafeas(occs *containeranalysis.OccurrenceIterator, basedir string
 	return results, nil
 }
 
+func filenameSanitize(r rune) rune {
+	// https://docs.microsoft.com/en-us/windows/win32/msi/filename
+	switch r {
+	case '/':
+		return '_'
+	case '+', ',', ';', '=', '[', ']', '\\', '?', '|', '<', '>', ':', '*', '"':
+		return '.'
+	default:
+		return r
+	}
+}
+
 func TransformOccurance(occ *grafeas.Occurrence, basedir string) (*Issue, error) {
 	vuln := occ.GetVulnerability()
 	if vuln == nil {
@@ -108,7 +120,9 @@ func TransformOccurance(occ *grafeas.Occurrence, basedir string) (*Issue, error)
 		pack.GetAffectedLocation().GetPackage(),
 		pack.GetAffectedLocation().GetVersion().GetName(),
 	)
-	path := filepath.Join(basedir, strings.ReplaceAll(filename, "/", "_"))
+	// Sanitize filename
+	filename = strings.Map(filenameSanitize, filename)
+	path := filepath.Join(basedir, filename)
 	eventPath := filepath.Join(basedir, filepath.Base(occ.GetName())+".json")
 
 	zap.L().Info("writing file",
