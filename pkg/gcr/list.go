@@ -18,7 +18,7 @@ func FindImage(root, project, service, tag string) (string, error) {
 		return "", err
 	}
 
-	auth, err := google.Keychain.Resolve(repo.Registry)
+	auth, err := google.NewEnvAuthenticator()
 	if err != nil {
 		return "", err
 	}
