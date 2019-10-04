@@ -124,7 +124,15 @@ func TransformOccurance(occ *grafeas.Occurrence, basedir string) (*Issue, error)
 	// Sanitize filename
 	filename = strings.Map(filenameSanitize, filename)
 	path := filepath.Join(basedir, filename)
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return nil, err
+	}
 	eventPath := filepath.Join(basedir, filepath.Base(occ.GetName())+".json")
+	absEventPath, err := filepath.Abs(eventPath)
+	if err != nil {
+		return nil, err
+	}
 
 	zap.L().Info("writing file",
 		zap.String("module", path),
@@ -148,11 +156,6 @@ func TransformOccurance(occ *grafeas.Occurrence, basedir string) (*Issue, error)
 		return nil, err
 	}
 
-	absEventPath, err := filepath.Abs(eventPath)
-	if err != nil {
-		return nil, err
-	}
-
 	events := make([]Event, 0, len(vuln.GetRelatedUrls()))
 	for _, re := range vuln.GetRelatedUrls() {
 		events = append(events, Event{
@@ -169,7 +172,7 @@ func TransformOccurance(occ *grafeas.Occurrence, basedir string) (*Issue, error)
 	iss := &Issue{
 		Checker:     "VULNERABLE_CONTAINER_COMPONENT",
 		Extra:       pack.GetAffectedLocation().GetPackage(),
-		File:        path,
+		File:        strings.ReplaceAll(absPath, "\\", "/"),
 		Subcategory: occ.GetKind().String(),
 		Properties: Property{
 			Type:            "Use of vulnerable container component",
