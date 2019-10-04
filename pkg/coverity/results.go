@@ -148,12 +148,17 @@ func TransformOccurance(occ *grafeas.Occurrence, basedir string) (*Issue, error)
 		return nil, err
 	}
 
+	absEventPath, err := filepath.Abs(eventPath)
+	if err != nil {
+		return nil, err
+	}
+
 	events := make([]Event, 0, len(vuln.GetRelatedUrls()))
 	for _, re := range vuln.GetRelatedUrls() {
 		events = append(events, Event{
 			Tag:         "vulnerable_component",
 			Description: fmt.Sprintf("%s has known vulnerabilities", strings.Title(pack.GetAffectedLocation().GetPackage())),
-			File:        eventPath,
+			File:        strings.ReplaceAll(absEventPath, "\\", "/"),
 			LinkURL:     re.GetUrl(),
 			LinkText:    re.GetLabel(),
 			Line:        1,
