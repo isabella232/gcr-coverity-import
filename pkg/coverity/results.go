@@ -35,6 +35,7 @@ type Issue struct {
 }
 
 type Property struct {
+	Type            string `json:"type"`
 	Category        string `json:"category"`
 	Impact          string `json:"impact"`
 	CWE             int    `json:"cwe"`
@@ -166,6 +167,7 @@ func TransformOccurance(occ *grafeas.Occurrence, basedir string) (*Issue, error)
 		File:        path,
 		Subcategory: occ.GetKind().String(),
 		Properties: Property{
+			Type:            "Use of vulnerable container component",
 			Category:        fmt.Sprintf("%s impact component in container", strings.Title(strings.ToLower(pack.GetSeverityName()))),
 			Impact:          CoverityImpact(pack.GetSeverityName()),
 			LongDescription: fmt.Sprintf("%s: %s", vuln.GetShortDescription(), vuln.GetLongDescription()),
